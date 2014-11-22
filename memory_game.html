@@ -1,0 +1,182 @@
+<html>
+<head>
+<title>Memory Game</title>
+<script src="http://davealger.com/python/embedskulptor.js"></script>
+</head>
+<body>
+<script>
+(function() {
+var options = {
+ "gui": {
+  "show": true
+ },
+ "console": {
+  "show": false
+ },
+ "code": {
+  "show": false
+ }
+};
+
+embedSkulptor(options,(function () {/*
+####################################################################################################
+# PASTE YOUR PYTHON CODE BELOW
+####################################################################################################
+
+# implementation of card game - Memory
+# Author Hung-Tu Dinh
+import simplegui
+import random
+
+SIZE = 370 #Background image size in pixels
+CANVAS_SIZE = 600
+SIDE = 4
+NUM_PIC = SIDE*SIDE
+WIDTH = CANVAS_SIZE/SIDE
+turn = 0
+deck = range(NUM_PIC/2) + range(NUM_PIC/2)
+text_size = WIDTH/2
+row = 0
+col = 0
+pass_novice = False
+pass_master = False
+
+# helper function to initialize globals
+def new_game():
+    global deck, state, turn, exposed    
+    state = 0
+    turn = 0
+    label.set_text("Turns = "+str(turn))
+    instruction.set_text("Instruction: The grid covers TWO identical sets of number from 0 to "+str(NUM_PIC/2-1)+". Click on the canvas to open the cell.")
+    random.shuffle(deck)
+    exposed = [False]*NUM_PIC
+       
+# define event handlers
+def mouseclick(pos):
+    # add game state logic here
+    global exposed, state, turn, pass_novice, pass_master
+    global row_id, col_id # Convert mouse pos into relative row, col of the grid
+    global current, last_1, last_2 # Tracking of current and two last clicks
+    col_id = pos[0]/WIDTH        
+    row_id = pos[1]/WIDTH        
+    current = row_id*SIDE+col_id
+    
+    if(exposed[current] == False):
+        exposed[current] = True
+        if state == 0: # Initialization
+            state = 1
+            last_1 = current
+            last_2 = last_1
+        elif state == 1:  # Only 1 picture is displayed              
+            turn = turn + 1
+            label.set_text("Turns = "+str(turn))
+            last_2 = last_1
+            last_1 = current
+            state = 2
+        else:             # Two pictures are displayed
+            if deck[last_1] != deck[last_2]:
+                exposed[last_2] = False            
+                exposed[last_1] = False            
+            last_2 = last_1
+            last_1 = current
+            state = 1   
+    if all(exposed):
+        if (not pass_novice): # Not yet passed the beginner level
+            pass_novice = True
+        else: 
+            if (not pass_master):
+                pass_master = True
+# cards are logically WIDTH x WIDTH pixels in size    
+def draw(canvas):  
+    # Draw background image
+    canvas.draw_image(background_image,(SIZE/2, SIZE/2), (SIZE, SIZE), (WIDTH*SIDE/2, WIDTH*SIDE/2), (WIDTH*SIDE, WIDTH*SIDE))
+    global row, col
+        
+    for i in range(NUM_PIC):   
+        row = i/SIDE
+        col = i%SIDE            
+        canvas.draw_polygon([(WIDTH*col, WIDTH*row), (WIDTH*(col+1), WIDTH*row), (WIDTH*(col+1), WIDTH*(row+1)),(WIDTH*col, WIDTH*(row+1))], 2, 'Red')
+        if all(exposed):   
+            win(canvas)  
+        else:
+            if (exposed[i]): #Exposed
+                num = deck[i]                
+                canvas.draw_text(str(deck[i]), (text_alignment(num)*WIDTH+WIDTH*col, 0.75*WIDTH+WIDTH*row), WIDTH, 'Red')
+            else:  # Not exposed -> remain the Green back          
+               canvas.draw_polygon([(WIDTH*col, WIDTH*row), (WIDTH*(col+1), WIDTH*row), (WIDTH*(col+1), WIDTH*(row+1)),(WIDTH*col, WIDTH*(row+1))], 2, 'Red', 'Green')
+                
+def win(canvas): #Display winner notification
+    global text_size
+    canvas.draw_text('You win!!',(0.25*WIDTH,0.75*WIDTH), text_size, "Gold")    
+    if text_size < WIDTH:
+        text_size = text_size + 0.5        
+        
+def beginner(): # Beginner level with 4x4 grid
+    global SIDE, NUM_PIC, WIDTH, turn, deck, text_size
+    SIDE = 4
+    NUM_PIC = SIDE*SIDE
+    WIDTH = CANVAS_SIZE/SIDE
+    turn = 0
+    deck = range(NUM_PIC/2) + range(NUM_PIC/2)
+    text_size = WIDTH/2
+    new_game()    
+        
+def master(): # Master level with 6x6 grid
+    global SIDE, NUM_PIC, WIDTH, turn, deck, text_size
+    if (pass_novice):
+        SIDE = 6
+    NUM_PIC = SIDE*SIDE
+    WIDTH = CANVAS_SIZE/SIDE
+    turn = 0
+    deck = range(NUM_PIC/2) + range(NUM_PIC/2)
+    text_size = WIDTH/2
+    new_game()
+
+def advanced(): # Advanced level with 8x8 grid
+    global SIDE, NUM_PIC, WIDTH, turn, deck, text_size
+    if (pass_master):
+        SIDE = 8
+    NUM_PIC = SIDE*SIDE
+    WIDTH = CANVAS_SIZE/SIDE
+    turn = 0
+    deck = range(NUM_PIC/2) + range(NUM_PIC/2)
+    text_size = WIDTH/2
+    new_game()
+
+    # Alignment for the number display 
+def text_alignment(num):
+    if num <= 9: # 1 digit
+        return 0.25
+    else:        # 2 digits
+        return 0    
+    
+# create frame and add a button and labels
+frame = simplegui.create_frame("Memory", CANVAS_SIZE, CANVAS_SIZE)
+frame.add_label("Reset to beginner level")
+frame.add_button("Reset 4x4", beginner)
+frame.add_label("Master level can only be accessed after completion of beginner level")
+frame.add_button("Master 6x6", master)
+frame.add_label("Advanced level can only be accessed after completion of master level")
+frame.add_button("Advanced 8x8", advanced)
+instruction = frame.add_label("Instruction:")
+label = frame.add_label("Turns = "+str(turn))
+background_image = simplegui.load_image('http://img4.wikia.nocookie.net/__cb20110105215405/39clues/images/3/37/Neuschwanstein_castle.jpg')
+
+# register event handlers
+frame.set_mouseclick_handler(mouseclick)
+frame.set_draw_handler(draw)
+
+# get things rolling
+new_game()
+frame.start()
+# Always remember to review the grading rubric
+
+
+####################################################################################################
+# PASTE YOUR PYTHON CODE ABOVE
+####################################################################################################
+*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]);
+})();
+</script>
+
+</body>
