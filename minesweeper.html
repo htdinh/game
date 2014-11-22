@@ -1,0 +1,375 @@
+<html>
+<head>
+<title>Memory Game</title>
+<script src="http://davealger.com/python/embedskulptor.js"></script>
+</head>
+<body>
+<script>
+(function() {
+var options = {
+ "gui": {
+  "show": true
+ },
+ "console": {
+  "show": false
+ },
+ "code": {
+  "show": false
+ }
+};
+
+embedSkulptor(options,(function () {/*
+####################################################################################################
+# PASTE YOUR PYTHON CODE BELOW
+####################################################################################################
+
+import simplegui
+import random
+
+# constants
+WIDTH = 400
+HEIGHT = 480
+IMAGE_SIZE = [170,170]
+IMAGE_CENTER = [85,85]
+SQUARE_SIZE = [40,40]
+SQUARE_CENTER = [20,20]
+SPACE = 40
+GAME_OVER_SIZE = [450, 170]
+RESTART_AREA = [400, 150]
+bomb_set = set()
+in_game = True
+set_flag = False
+time_display = "0:00"
+timer_abs = 0
+after_2s_interval = False
+two_sec_disabled = True
+in_interval = False
+start_time = 0
+exp_index = 0
+clear_result = False
+show_result = False
+
+
+# Set of images
+square_image = simplegui.load_image("https://www.dropbox.com/s/d2awyyqvettllqh/small_square.JPG?dl=1")
+blank = simplegui.load_image("https://www.dropbox.com/s/gha0en2ocifb7n3/blank.JPG?dl=1")
+one = simplegui.load_image("https://www.dropbox.com/s/u1nsku0ljt4ojzp/1.JPG?dl=1")
+two = simplegui.load_image("https://www.dropbox.com/s/3m89wxvagxijnux/2.JPG?dl=1")
+three = simplegui.load_image("https://www.dropbox.com/s/g9a0soczi4wp93t/3.jpg?dl=1")
+four = simplegui.load_image("https://www.dropbox.com/s/fbje4vrq2gv4h3s/4.jpg?dl=1")
+five = simplegui.load_image("https://www.dropbox.com/s/vf7gcp3jlyh9o8a/5.jpg?dl=1")
+six = simplegui.load_image("https://www.dropbox.com/s/z3pqxnkq5k2h2n0/6.jpg?dl=1")
+seven = simplegui.load_image("https://www.dropbox.com/s/pp1i6d1zitxuzjk/7.jpg?dl=1")
+eight = simplegui.load_image("https://www.dropbox.com/s/br3ygsqfwvw6iwe/8.jpg?dl=1")
+bomb = simplegui.load_image("https://www.dropbox.com/s/3g5h93adz25r4b8/bomb.jpg?dl=1")
+flag = simplegui.load_image("https://www.dropbox.com/s/1b2kl5zbsyjko8v/flag.jpg?dl=1")
+game_over = simplegui.load_image("https://www.dropbox.com/s/goppke27z7eyay6/game_over.JPG?dl=1")
+congratz = simplegui.load_image("https://www.dropbox.com/s/36jbkw0lfxyua8i/congratz.JPG?dl=1")
+result_pic = {0:congratz,
+              1:game_over}
+# Explosion image is created by Kim Lathrop, may be freely re-used in non-commercial projects, please credit Kim
+explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png")
+explosion_center = [64, 64]
+explosion_size   = [128, 128]
+#Sound effect downloaded free from SoundBible
+explosion_sound = simplegui.load_sound("https://www.dropbox.com/s/80lk5bixzczzxcy/Bomb_Exploding.mp3?dl=1")
+
+# Dictionary of images according to score
+num_image = {0:blank,
+             1:one, 
+             2:two, 
+             3:three,
+             4:four,
+             5:five,
+             6:six,
+             7:seven,
+             8:eight,
+             9:bomb,
+             10:flag}
+
+# Create an empty 
+matrix = {}
+flag_set = {}
+for x in range(0,10):
+    flag_set[x] = [False,10]
+    for y in range(0,10): 
+        matrix[(x, y)] = [False, 0]  # Shown status, score, bomb status
+
+# define the square object:
+class Square:
+    def __init__(self, x, y , chosen, score):
+        self.pos = [x,y]
+        self.chosen = chosen
+        self.score = score
+    
+    def get_pos(self):
+        return self.pos
+    def get_chosen(self):
+        return self.chosen
+    def get_score(self):
+        return self.score
+    
+    def draw(self, canvas):
+        if self.chosen:
+            canvas.draw_image(num_image[self.score], 
+                              IMAGE_CENTER,
+                              IMAGE_SIZE, 
+                              [SQUARE_CENTER[0] + SPACE*self.pos[0],SQUARE_CENTER[0] + SPACE*self.pos[1]], 
+                              SQUARE_SIZE) 
+        else:
+            canvas.draw_image(square_image, 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*self.pos[0],SQUARE_CENTER[0] + SPACE*self.pos[1]], 
+                                  SQUARE_SIZE) 
+            
+# main draw canvas
+def draw(canvas):
+    # Timer display
+    global timer_abs, time_display, start_time, in_interval, exp_index, show_result      
+    
+    sum = 0
+    for x in range(0,10):
+        
+        canvas.draw_image(num_image[flag_set[x][1]], 
+                          IMAGE_CENTER,
+                          IMAGE_SIZE, 
+                          [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*11], 
+                          SQUARE_SIZE)  
+        for y in range(0,10):  
+            if matrix[(x,y)][0]:
+                sum += 1
+                if matrix[(x,y)][1] == 0:
+                    matrix[(x,y)][0] = True
+                    loop_neighbor(x,y,open_square)
+                
+                try:
+                    canvas.draw_image(num_image[matrix[(x,y)][1]], 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                  SQUARE_SIZE)    
+                except: # Explosion animation (beyond the dictionary of images)                  
+                    canvas.draw_image(explosion_image, 
+                                      [explosion_center[0]+((exp_index/3)%24)*explosion_size[0],explosion_center[1]],
+                                      explosion_size, 
+                                      [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                      SQUARE_SIZE)    
+                    exp_index += 1
+            else:
+                canvas.draw_image(square_image, 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                  SQUARE_SIZE) 	
+    if set_flag:
+        canvas.draw_text("Flag selected",[40, HEIGHT/2],40,'Blue',"monospace")
+    if sum == 100:        
+        if not in_interval:
+            start_time = timer_abs
+            in_interval = True              
+        else:
+            if timer_abs - start_time >=1: # 2 seconds lapsed                                                     
+                if in_game:
+                    pic = 0
+                else:
+                    pic = 1
+                
+                #canvas.draw_image(game_over, #362, 139 GAME_OVER_SIZE = [450, 170]
+                #                      [GAME_OVER_SIZE[0]/2,GAME_OVER_SIZE[1]/2],
+                #                      GAME_OVER_SIZE, 
+                #                      [WIDTH/2,HEIGHT/2], 
+                #                      GAME_OVER_SIZE) 
+                if not clear_result:
+                    show_result = True
+                    if in_game:
+                        canvas.draw_image(congratz, #362, 139
+                                              [225,85],
+                                              [450, 170], 
+                                              [WIDTH/2,HEIGHT/2], 
+                                              RESTART_AREA) 
+                    else: 
+                        canvas.draw_image(game_over, #379, 142
+                                              [225,85],
+                                              [450, 170], 
+                                              [WIDTH/2,HEIGHT/2], 
+                                              RESTART_AREA)                                 
+    if in_game:
+        time_display = time_string() # Get the time according the clock
+    canvas.draw_text("Time |"+ time_display+"|",[10, 25+ SPACE*10],30,'Black',"monospace")
+# game starts
+def start():
+    global matrix, timer_abs, time_display, in_game, after_2s_interval, clear_result, show_result
+    show_result = False
+    clear_result = False
+    in_game = True
+    timer_abs = 0
+    time_display = "0:00"
+    timer.start()
+    after_2s_interval = False
+    in_interval = False 
+    for x in range(0,10):
+        flag_set[x] = [True,10]
+        for y in range(0,10): 
+            matrix[(x, y)] = [False, 0]  # Shown status, score, bomb status
+    
+    # Randomize the bomb position
+    bomb_pos = range(0,10) + range(0,10)        
+    random.shuffle(bomb_pos)    
+    for i in range (0,10):       
+        bomb_x = bomb_pos[i] 
+        bomb_y = bomb_pos[i+1] 
+        bomb_set.add((bomb_x,bomb_y))
+        matrix[(bomb_x,bomb_y)][1] = 9        
+#        matrix[(bomb_x,bomb_y)][0] = False
+        loop_neighbor(bomb_x,bomb_y,add_one)
+        
+def add_one_change_True(x):
+    x[0] = True
+    if x[1] < 9:
+        x[1] += 1    
+    
+def add_one(x):    
+    if x[1] < 9:
+        x[1] += 1       
+
+def open_square(x):
+    x[0] = True
+
+def open_all():
+    global matrix
+    for x in range(0,10):
+        for y in range(0,10):  
+            matrix[(x,y)][0] = True
+    
+def loop_neighbor(bomb_x,bomb_y, function):
+    global matrix
+    #Increase score for surrounding squares
+    try:            
+        function(matrix[(bomb_x-1,bomb_y-1)])        
+    except:           
+        pass
+    try:            
+        function(matrix[(bomb_x-1,bomb_y+0)])
+    except:
+        pass
+    try:            
+        function(matrix[(bomb_x-1,bomb_y+1)])
+    except:
+        pass
+    try:            
+        function(matrix[(bomb_x+1,bomb_y-1)])
+    except:            
+        pass
+    try:            
+        function(matrix[(bomb_x+1,bomb_y+0)])
+    except:
+        pass
+    try:            
+        function(matrix[(bomb_x+1,bomb_y+1)])
+    except:
+        pass
+    try:            
+        function(matrix[(bomb_x+0,bomb_y+1)])
+    except:
+        pass
+    try:            
+        function(matrix[(bomb_x+0,bomb_y-1)])
+    except:
+        pass
+            
+                    
+# Mouseclick handler
+def mouseclick(position):
+    global matrix, in_game, set_flag, flag, clear_result, show_result
+    x = position[0]/SPACE
+    y = position[1]/SPACE   
+    if in_game:
+        try: #Inside the field
+            # Place a flag
+            if set_flag and matrix[(x,y)][0] == False: 
+                matrix[(x,y)][1] = 10 # Change the square picture to a flag
+                matrix[(x,y)][0] = True # Open the marked square
+                set_flag = False # Reset the flag so if the player choose another flag, flag will be raised again
+            else: #Neither flag raised nor a valid unopen square
+                matrix[(x,y)][0] = True
+                    # If the square has zero surrounding bomb
+                if matrix[(x,y)][1] == 0:        
+                    loop_neighbor(x,y,open_square)
+                    # Open a bomb
+                elif matrix[(x,y)][1] == 9:
+                    #explosion_sound.play()
+                    matrix[(x,y)][1] = 11 # Explosion animation
+                    in_game = False
+                    open_all()
+        except: #Outside the field
+            if y == 11: # In the flag area
+                if flag_set[x][0] == True:
+                    set_flag = True
+                    flag_set[x][1] = 0
+                    flag_set[x][0] = False
+                else:
+                    if set_flag:
+                        flag_set[x][1] = 10  
+                        flag_set[x][0] = True
+                        set_flag = False
+    elif show_result:                
+        pos_x_in_range = WIDTH/2 - RESTART_AREA[0]/2 < position[0] and position[0] < (WIDTH/2 + RESTART_AREA[0]/2)
+        pos_y_in_range = HEIGHT/2 - RESTART_AREA[1]/2 < position[1] and position[1] < (HEIGHT/2 + RESTART_AREA[1]/2)
+        if pos_x_in_range and pos_y_in_range:
+            start()
+            clear_result = False            
+        else: 
+            clear_result = True
+        show_result = False
+        print clear_result
+        print position
+        print WIDTH/2 - RESTART_AREA[0]/2 
+# Timer
+def timer_handler():
+    global timer_abs, time_display
+    timer_abs = timer_abs + 1
+
+def time_string():
+    minute = timer_abs%60
+    if minute < 10:
+        minute_string = "0"+str(minute)
+    else:
+        minute_string = str(minute)
+    return str(timer_abs/60)+":"+minute_string
+
+# Time between the end of game and announcement
+def two_second_interval():
+    global after_2s_interval, two_sec_disabled
+    after_2s_interval = True
+    two_sec_disabled = True
+    two_sec.stop()    
+    
+# Create a frame
+frame = simplegui.create_frame("Minesweeper", WIDTH, HEIGHT) 
+button1 = frame.add_button('Restart', start, 100)
+timer = simplegui.create_timer(1000, timer_handler)
+two_sec = simplegui.create_timer(2000,two_second_interval)
+
+# Register handler
+frame.set_draw_handler(draw)
+frame.set_mouseclick_handler(mouseclick)
+frame.set_canvas_background('White')
+frame.add_label('')
+frame.add_label('FLAG SETTING')
+frame.add_label('**************')
+frame.add_label('Select a square to unopen it. Ten squares contain mines underneath. If you suspect a mine underneath a square, first select a flag the select the suspected square to mark the mine. Otherwise, to return a flag, just click on any vacant square in flag area')
+
+# Start
+frame.start()
+start()
+
+####################################################################################################
+# PASTE YOUR PYTHON CODE ABOVE
+####################################################################################################
+
+*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]);
+})();
+</script>
+
+</body>
