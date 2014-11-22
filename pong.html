@@ -202,9 +202,9 @@ def keydown(key):
         paddle2_vel = -pad_speed       
     if key==simplegui.KEY_MAP["down"]:
         paddle2_vel = pad_speed
-    if key==simplegui.KEY_MAP["w"]:
+    if key==simplegui.KEY_MAP["r"]:
         paddle1_vel = -pad_speed        
-    if key==simplegui.KEY_MAP["s"]:
+    if key==simplegui.KEY_MAP["f"]:
         paddle1_vel = pad_speed
    
 def keyup(key):
@@ -235,7 +235,7 @@ frame.add_input('1st Player Name:',playerA_name_handler, 100)
 frame.add_input('2nd Player Name:',playerB_name_handler, 100)
 frame.set_canvas_background('Green')
 
-frame.add_label('Player A uses w and s')
+frame.add_label('Player A uses R and F')
 frame.add_label('Player B uses Up and Down')
 # start frame
 new_game()
