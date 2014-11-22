@@ -89,7 +89,7 @@ def mouseclick(pos):
 # cards are logically WIDTH x WIDTH pixels in size    
 def draw(canvas):  
     # Draw background image
-    canvas.draw_image(background_image,(SIZE/2, SIZE/2), (SIZE, SIZE), (WIDTH*SIDE/2, WIDTH*SIDE/2), (WIDTH*SIDE, WIDTH*SIDE))
+    canvas.draw_image(background_image,(3000/2,4000/2),(3000, 3000),(300,300),(600,600))
     global row, col
         
     for i in range(NUM_PIC):   
@@ -160,7 +160,7 @@ frame.add_label("Advanced level can only be accessed after completion of master 
 frame.add_button("Advanced 8x8", advanced)
 instruction = frame.add_label("Instruction:")
 label = frame.add_label("Turns = "+str(turn))
-background_image = simplegui.load_image('https://www.dropbox.com/s/aik33tzmcriwn24/Neuschwanstein_castle.jpg?dl=1')
+background_image = simplegui.load_image("https://www.dropbox.com/s/7raquuqrry2dyum/Madison.JPG?dl=1")
 
 # register event handlers
 frame.set_mouseclick_handler(mouseclick)
