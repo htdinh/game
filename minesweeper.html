@@ -200,6 +200,7 @@ def draw(canvas):
 # game starts
 def start():
     global matrix, timer_abs, time_display, in_game, after_2s_interval, clear_result, show_result
+    button1.set_text('Restart')	
     show_result = False
     clear_result = False
     in_game = True
@@ -347,7 +348,7 @@ def two_second_interval():
     
 # Create a frame
 frame = simplegui.create_frame("Minesweeper", WIDTH, HEIGHT) 
-button1 = frame.add_button('Restart', start, 100)
+button1 = frame.add_button('Start', start, 100)
 timer = simplegui.create_timer(1000, timer_handler)
 two_sec = simplegui.create_timer(2000,two_second_interval)
 
@@ -362,7 +363,7 @@ frame.add_label('Select a square to unopen it. Ten squares contain mines underne
 
 # Start
 frame.start()
-start()
+
 
 ####################################################################################################
 # PASTE YOUR PYTHON CODE ABOVE
