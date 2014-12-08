@@ -43,11 +43,12 @@ time_display = "0:00"
 timer_abs = 0
 after_2s_interval = False
 two_sec_disabled = True
-in_interval = False
 start_time = 0
 exp_index = 0
 clear_result = False
 show_result = False
+win = True
+click_time = 0
 
 
 # Set of images
@@ -126,9 +127,9 @@ class Square:
 # main draw canvas
 def draw(canvas):
     # Timer display
-    global timer_abs, time_display, start_time, in_interval, exp_index, show_result      
+    global timer_abs, time_display, start_time,  exp_index, show_result, in_game      
     
-    sum = 0
+    sum_field = 0
     for x in range(0,10):
         
         canvas.draw_image(num_image[flag_set[x][1]], 
@@ -138,7 +139,7 @@ def draw(canvas):
                           SQUARE_SIZE)  
         for y in range(0,10):  
             if matrix[(x,y)][0]:
-                sum += 1
+                sum_field += 1
                 if matrix[(x,y)][1] == 0:
                     matrix[(x,y)][0] = True
                     loop_neighbor(x,y,open_square)
@@ -164,42 +165,32 @@ def draw(canvas):
                                   SQUARE_SIZE) 	
     if set_flag:
         canvas.draw_text("Flag selected",[40, HEIGHT/2],40,'Blue',"monospace")
-    if sum == 100:        
-        if not in_interval:
-            start_time = timer_abs
-            in_interval = True              
-        else:
-            if timer_abs - start_time >=1: # 2 seconds lapsed                                                     
-                if in_game:
-                    pic = 0
-                else:
-                    pic = 1
-                
-                #canvas.draw_image(game_over, #362, 139 GAME_OVER_SIZE = [450, 170]
-                #                      [GAME_OVER_SIZE[0]/2,GAME_OVER_SIZE[1]/2],
-                #                      GAME_OVER_SIZE, 
-                #                      [WIDTH/2,HEIGHT/2], 
-                #                      GAME_OVER_SIZE) 
-                if not clear_result:
-                    show_result = True
-                    if in_game:
-                        canvas.draw_image(congratz, #362, 139
+    if sum_field == 100:  #all the square are opened
+        in_game = False  # End the game        
+        if not clear_result:
+            show_result = True
+            
+            if win:
+                canvas.draw_image(congratz, #362, 139
                                               [225,85],
                                               [450, 170], 
                                               [WIDTH/2,HEIGHT/2], 
                                               RESTART_AREA) 
-                    else: 
-                        canvas.draw_image(game_over, #379, 142
-                                              [225,85],
-                                              [450, 170], 
-                                              [WIDTH/2,HEIGHT/2], 
-                                              RESTART_AREA)                                 
-    if in_game:
-        time_display = time_string() # Get the time according the clock
+            else: 
+                canvas.draw_image(game_over, #379, 142
+                                                  [225,85],
+                                                  [450, 170], 
+                                                  [WIDTH/2,HEIGHT/2], 
+                                                  RESTART_AREA)                                 
+            time_display = time_string(click_time)    
+    else:
+        time_display = time_string(timer_abs) # Get the time according the clock
     canvas.draw_text("Time |"+ time_display+"|",[10, 25+ SPACE*10],30,'Black',"monospace")
+    
 # game starts
 def start():
-    global matrix, timer_abs, time_display, in_game, after_2s_interval, clear_result, show_result
+    global matrix, timer_abs, time_display, in_game, after_2s_interval, clear_result, show_result, win
+    win = True
     button1.set_text('Restart')	
     show_result = False
     clear_result = False
@@ -278,11 +269,11 @@ def loop_neighbor(bomb_x,bomb_y, function):
         function(matrix[(bomb_x+0,bomb_y-1)])
     except:
         pass
-            
-                    
+                                
 # Mouseclick handler
 def mouseclick(position):
-    global matrix, in_game, set_flag, flag, clear_result, show_result
+    global matrix, in_game, set_flag, flag, clear_result, show_result, win, click_time
+    click_time = timer_abs
     x = position[0]/SPACE
     y = position[1]/SPACE   
     if in_game:
@@ -301,19 +292,19 @@ def mouseclick(position):
                 elif matrix[(x,y)][1] == 9:
                     #explosion_sound.play()
                     matrix[(x,y)][1] = 11 # Explosion animation
+                    win = False
                     in_game = False
                     open_all()
         except: #Outside the field
             if y == 11: # In the flag area
-                if flag_set[x][0] == True:
+                if flag_set[x][0] == True and not set_flag:
                     set_flag = True
                     flag_set[x][1] = 0
                     flag_set[x][0] = False
-                else:
-                    if set_flag:
-                        flag_set[x][1] = 10  
-                        flag_set[x][0] = True
-                        set_flag = False
+                elif flag_set[x][0] == False and set_flag:                    
+                    flag_set[x][1] = 10  
+                    flag_set[x][0] = True
+                    set_flag = False
     elif show_result:                
         pos_x_in_range = WIDTH/2 - RESTART_AREA[0]/2 < position[0] and position[0] < (WIDTH/2 + RESTART_AREA[0]/2)
         pos_y_in_range = HEIGHT/2 - RESTART_AREA[1]/2 < position[1] and position[1] < (HEIGHT/2 + RESTART_AREA[1]/2)
@@ -323,32 +314,30 @@ def mouseclick(position):
         else: 
             clear_result = True
         show_result = False
-        print clear_result
-        print position
-        print WIDTH/2 - RESTART_AREA[0]/2 
+    print win
 # Timer
 def timer_handler():
     global timer_abs, time_display
     timer_abs = timer_abs + 1
 
-def time_string():
+def time_string(timer_abs):
     minute = timer_abs%60
     if minute < 10:
         minute_string = "0"+str(minute)
     else:
         minute_string = str(minute)
     return str(timer_abs/60)+":"+minute_string
-
-# Time between the end of game and announcement
+    
 def two_second_interval():
     global after_2s_interval, two_sec_disabled
     after_2s_interval = True
     two_sec_disabled = True
-    two_sec.stop()    
+    two_sec.stop()        
     
 # Create a frame
 frame = simplegui.create_frame("Minesweeper", WIDTH, HEIGHT) 
 button1 = frame.add_button('Start', start, 100)
+#button2 = frame.add_button('Open all', open_all, 100)
 timer = simplegui.create_timer(1000, timer_handler)
 two_sec = simplegui.create_timer(2000,two_second_interval)
 
@@ -363,6 +352,7 @@ frame.add_label('Select a square to unopen it. Ten squares contain mines underne
 
 # Start
 frame.start()
+
 
 
 ####################################################################################################
