@@ -22,7 +22,6 @@ embedSkulptor(options,(function () {/*
 ####################################################################################################
 # PASTE YOUR PYTHON CODE BELOW
 ####################################################################################################
-
 # Mini-project #6 - Blackjack
 # Author Hung-Tu Dinh
 import simplegui
@@ -59,8 +58,7 @@ class Card:
             self.rank = rank
         else:
             self.suit = None
-            self.rank = None
-            print "Invalid card: ", suit, rank
+            self.rank = None            
 
     def __str__(self):
         return self.suit + self.rank
@@ -154,18 +152,14 @@ def deal():
     dealer_hand = Hand()
     for i in range(2):
         player_hand.add_card(deck.deal_card())       
-        dealer_hand.add_card(deck.deal_card())
-
-    print dealer_hand
-    print player_hand
+        dealer_hand.add_card(deck.deal_card())    
     prompt = 'Hit or Stand?'
     score = win - loss
 def hit():
     global in_play, deck, player_hand, dealer_hand, outcome, score, loss, prompt     
     # if the hand is in play, hit the player
     if in_play:
-        player_hand.add_card(deck.deal_card())  
-        print player_hand
+        player_hand.add_card(deck.deal_card())          
         # if busted, assign a message to outcome, update in_play and score
         if player_hand.get_value() > 21:
             print "You have busted"
@@ -204,32 +198,36 @@ def draw(canvas):
     canvas.draw_text('Blackjack',(100,60),40,'White')
     Score_print = 'Score '+str(score)
     canvas.draw_text(Score_print,(400,60),40,'White')
-    canvas.draw_text('Dealer', (100, 130), 40, 'Black')
-    canvas.draw_text(outcome, (300, 130), 40, 'Black')
+    canvas.draw_text('Dealer', (100, 130), 40, 'Red')
+    canvas.draw_text(outcome, (300, 130), 40, 'Red')
     dealer_hand.draw(canvas, [100, 150])   
     if in_play:
         canvas.draw_image(card_back, CARD_BACK_CENTER, CARD_BACK_SIZE, (100+CARD_BACK_SIZE[0]/2, 150+CARD_SIZE[1]/2),CARD_BACK_SIZE)     
         #canvas.draw_image(image, center_source, width_height_source, center_dest, width_height_dest)
         #canvas.draw_image(image, (1521 / 2, 1818 / 2), (1521, 1818), (50, 50), (100, 100))
-    canvas.draw_text('Playler', (100, 380), 40, 'Black')
-    canvas.draw_text(prompt, (300, 380), 40, 'Black')
+    canvas.draw_text('Playler', (100, 380), 40, 'Red')
+    canvas.draw_text(prompt, (300, 380), 40, 'Red')
     
     player_hand.draw(canvas, [100, 400])        
     
 # initialization frame
 frame = simplegui.create_frame("Blackjack", 600, 600)
-frame.set_canvas_background("Green")
-
+frame.set_canvas_background("#A5DF00")
 #create buttons and canvas callback
 frame.add_button("Deal", deal, 200)
 frame.add_button("Hit",  hit, 200)
 frame.add_button("Stand", stand, 200)
 frame.set_draw_handler(draw)
 
+frame.add_label('Game Instruction')
+frame.add_label('**********************')
+frame.add_label("The player and the dealer are each dealt two cards initially with one of the dealer's cards being dealt faced down. The player may then ask for the dealer to repeatedly 'hit' his hand by dealing him another card. If, at any point, the value of the player's hand exceeds 21, the player is 'busted' and loses immediately. At any point prior to busting, the player may 'stand' and the dealer will then hit his hand until the value of his hand is 17 or more. (For the dealer, aces count as 11 unless it causes the dealer's hand to bust). If the dealer busts, the player wins. Otherwise, the player and dealer then compare the values of their hands and the hand with the higher value wins. The dealer wins ties in our version.")
+
 
 # get things rolling
 deal()
 frame.start()
+
 
 ####################################################################################################
 # PASTE YOUR PYTHON CODE ABOVE
