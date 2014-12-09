@@ -138,7 +138,7 @@ def draw(canvas):
     #    bomb_trajectory_timer.start()
     
     # Jet falls out of canvas range    
-    if target_pos[0] < 0 or target_pos[0] > WIDTH or target_pos[1]< JET_LENGTH/4:
+    if target_pos[0] < -JET_LENGTH/2 or target_pos[0] > WIDTH or target_pos[1]< JET_LENGTH/4:
             reset_jet()
       
     # Draw knock down jets
