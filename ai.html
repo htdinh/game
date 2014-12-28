@@ -1,0 +1,603 @@
+<html>
+<head>
+<title>Minesweeper</title>
+<script src="http://davealger.com/python/embedskulptor.js"></script>
+</head>
+<body>
+<script>
+(function() {
+var options = {
+ "gui": {
+  "show": true
+ },
+ "console": {
+  "show": false
+ },
+ "code": {
+  "show": false
+ }
+};
+
+embedSkulptor(options,(function () {/*
+####################################################################################################
+# PASTE YOUR PYTHON CODE BELOW
+####################################################################################################
+
+import simplegui
+import random
+# This is now a perfect working version of Artificial Intelligent Robot
+# Sometime flag is placed wrong
+# Need to add debug function
+# Debug button could not resume - probably because of the shallow vs deep copy 
+WIDTH = 400
+HEIGHT = 480
+IMAGE_SIZE = [170,170]
+IMAGE_CENTER = [85,85]
+SQUARE_SIZE = [40,40]
+SQUARE_CENTER = [20,20]
+SPACE = 40
+GAME_OVER_SIZE = [450, 170]
+RESTART_AREA = [400, 150]
+bomb_set = set()
+in_game = False
+set_flag = False
+time_display = "0:00"
+timer_abs = 0
+after_2s_interval = False
+two_sec_disabled = True
+start_time = 0
+exp_index = 0
+clear_result = False
+show_result = False
+win = True
+click_time = 0
+debug_status = False
+flag_certainty = []
+open_certainty = []
+status = "Status"
+solution = {}
+temp_copy = {}
+
+
+# Set of images
+#Plain square: unopened
+square_image = simplegui.load_image("https://www.dropbox.com/s/d2awyyqvettllqh/small_square.JPG?dl=1")
+#Numeric or zero square: opened
+blank = simplegui.load_image("https://www.dropbox.com/s/gha0en2ocifb7n3/blank.JPG?dl=1")
+one = simplegui.load_image("https://www.dropbox.com/s/u1nsku0ljt4ojzp/1.JPG?dl=1")
+two = simplegui.load_image("https://www.dropbox.com/s/3m89wxvagxijnux/2.JPG?dl=1")
+three = simplegui.load_image("https://www.dropbox.com/s/g9a0soczi4wp93t/3.jpg?dl=1")
+four = simplegui.load_image("https://www.dropbox.com/s/fbje4vrq2gv4h3s/4.jpg?dl=1")
+five = simplegui.load_image("https://www.dropbox.com/s/vf7gcp3jlyh9o8a/5.jpg?dl=1")
+six = simplegui.load_image("https://www.dropbox.com/s/z3pqxnkq5k2h2n0/6.jpg?dl=1")
+seven = simplegui.load_image("https://www.dropbox.com/s/pp1i6d1zitxuzjk/7.jpg?dl=1")
+eight = simplegui.load_image("https://www.dropbox.com/s/br3ygsqfwvw6iwe/8.jpg?dl=1")
+bomb = simplegui.load_image("https://www.dropbox.com/s/3g5h93adz25r4b8/bomb.jpg?dl=1")
+flag = simplegui.load_image("https://www.dropbox.com/s/1b2kl5zbsyjko8v/flag.jpg?dl=1")
+game_over = simplegui.load_image("https://www.dropbox.com/s/goppke27z7eyay6/game_over.JPG?dl=1")
+congratz = simplegui.load_image("https://www.dropbox.com/s/36jbkw0lfxyua8i/congratz.JPG?dl=1")
+result_pic = {0:congratz,
+              1:game_over}
+# Explosion image is created by Kim Lathrop, may be freely re-used in non-commercial projects, please credit Kim
+explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png")
+explosion_center = [64, 64]
+explosion_size   = [128, 128]
+#Sound effect downloaded free from SoundBible
+explosion_sound = simplegui.load_sound("https://www.dropbox.com/s/80lk5bixzczzxcy/Bomb_Exploding.mp3?dl=1")
+
+# Dictionary of images according to score
+num_image = {0:blank, #opened, therefore in yellow color
+             1:one, 
+             2:two, 
+             3:three,
+             4:four,
+             5:five,
+             6:six,
+             7:seven,
+             8:eight,
+             9:bomb,
+             10:flag}
+
+# Create an empty 
+matrix = {}
+flag_set = {}
+for x in range(0,10):
+    flag_set[x] = [False,10]
+    for y in range(0,10): 
+        matrix[(x, y)] = [False, 0]  # Shown status, score, bomb status
+
+# define the square object:
+class Square:
+    def __init__(self, x, y , chosen, score):
+        self.pos = [x,y]
+        self.chosen = chosen
+        self.score = score
+    
+    def get_pos(self):
+        return self.pos
+    def get_chosen(self):
+        return self.chosen
+    def get_score(self):
+        return self.score
+    
+    def draw(self, canvas):
+        if self.chosen:
+            canvas.draw_image(num_image[self.score], 
+                              IMAGE_CENTER,
+                              IMAGE_SIZE, 
+                              [SQUARE_CENTER[0] + SPACE*self.pos[0],SQUARE_CENTER[0] + SPACE*self.pos[1]], 
+                              SQUARE_SIZE) 
+        else:
+            canvas.draw_image(square_image, 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*self.pos[0],SQUARE_CENTER[0] + SPACE*self.pos[1]], 
+                                  SQUARE_SIZE) 
+            
+# main draw canvas
+def draw(canvas):
+    # Timer display
+    global timer_abs, time_display, start_time,  exp_index, show_result, in_game, status
+    
+    sum_field = 0 #Total number of squares in the grid
+    for x in range(0,10):
+        # Draw the flag set in the last row
+        canvas.draw_image(num_image[flag_set[x][1]], 
+                          IMAGE_CENTER,
+                          IMAGE_SIZE, 
+                          [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*11], 
+                          SQUARE_SIZE)  
+        # Draw a 10x10 grid
+        for y in range(0,10):  
+            if matrix[(x,y)][0]: # If this field is opened
+                sum_field += 1
+                if matrix[(x,y)][1] == 0:
+                    matrix[(x,y)][0] = True
+                    loop_neighbor(x,y,open_square)
+                
+                # Draw the score
+                if matrix[(x,y)][1] < 10: #Number range
+                    canvas.draw_image(num_image[matrix[(x,y)][1]], 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                  SQUARE_SIZE)    
+                elif matrix[(x,y)][1] < 20: #Flag
+                    canvas.draw_image(num_image[10], 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                  SQUARE_SIZE)    
+                else: # Explosion animation (beyond the dictionary of images)    
+                    #if matrix[(x,y)][1] == 20: #Score for explosion
+                    canvas.draw_image(explosion_image, 
+                                      [explosion_center[0]+((exp_index/3)%24)*explosion_size[0],explosion_center[1]],
+                                      explosion_size, 
+                                      [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                      SQUARE_SIZE)    
+                    exp_index += 1
+            else: # Draw plain square
+                canvas.draw_image(square_image, 
+                                  IMAGE_CENTER,
+                                  IMAGE_SIZE, 
+                                  [SQUARE_CENTER[0] + SPACE*x,SQUARE_CENTER[0] + SPACE*y], 
+                                  SQUARE_SIZE) 	
+    
+    
+    if sum_field == 100:  #all the square are opened
+        in_game = False  # End the game        
+        if not clear_result:
+            show_result = True
+            
+            if win:
+                canvas.draw_image(congratz, #362, 139
+                                              [225,85],
+                                              [450, 170], 
+                                              [WIDTH/2,HEIGHT/2], 
+                                              RESTART_AREA) 
+            else: 
+                canvas.draw_image(game_over, #379, 142
+                                                  [225,85],
+                                                  [450, 170], 
+                                                  [WIDTH/2,HEIGHT/2], 
+                                                  RESTART_AREA)                                 
+            time_display = time_string(click_time)    #Time that mouse is click
+    else:
+        time_display = time_string(timer_abs) # Get the time according the clock
+    
+    canvas.draw_text("Time |"+ time_display+"|",[10, 25+ SPACE*10],20,'Black',"monospace")
+    if not in_game:
+        status = "Click start to play"
+    canvas.draw_text(status,[150, 25+ SPACE*10],20,'Black',"monospace")
+# game starts
+def start():
+    global matrix, timer_abs, time_display, in_game, after_2s_interval, clear_result, show_result, win,status, solution
+    win = True
+    button1.set_text('Restart')	
+    show_result = False
+    clear_result = False
+    in_game = True
+    timer_abs = 0
+    time_display = "0:00"
+    timer.start()
+    after_2s_interval = False
+    in_interval = False 
+    flag_certainty = []
+    open_certainty = []
+    status = "Game started"
+    #Initialize plain grid
+    for x in range(0,10):
+        flag_set[x] = [True,10]
+        for y in range(0,10): 
+            matrix[(x, y)] = [False, 0]  # Shown status, score, bomb status
+    
+    # Randomize the bomb position and modify the score for neighbor square
+    bomb_pos = range(0,10) + range(0,10)        
+    random.shuffle(bomb_pos)    
+    for i in range (0,10):       
+        bomb_x = bomb_pos[i] 
+        bomb_y = bomb_pos[i+1] 
+        bomb_set.add((bomb_x,bomb_y))
+        matrix[(bomb_x,bomb_y)][1] = 9        
+        loop_neighbor(bomb_x,bomb_y,add_one)
+    
+    # Keep a copy of the solution
+    solution = dict(matrix)
+def add_one_change_True(x,y):
+    matrix[x,y][0] = True
+    if matrix[x,y][1] < 9:
+        matrix[x,y][1] += 1    
+    
+def add_one(x,y):    
+    if matrix[x,y][1] < 9:
+        matrix[x,y][1] += 1       
+
+def open_square(x,y):
+    global matrix
+    matrix[(x,y)][0] = True
+    if matrix[(x,y)][1] == 9:
+        hit_mine(x,y)
+
+def open_all():
+    global matrix
+    for x in range(0,10):
+        for y in range(0,10):  
+            matrix[(x,y)][0] = True
+    
+def loop_neighbor(bomb_x,bomb_y, function):
+    global matrix
+    ret = []
+    #Increase score for surrounding squares
+    try:            
+        r1 = function(bomb_x-1,bomb_y-1)       
+        ret.append(r1)
+    except:           
+        pass
+    try:            
+        r2 = function(bomb_x-1,bomb_y+0)
+        ret.append(r2)
+    except:
+        pass
+    try:            
+        r3 = function(bomb_x-1,bomb_y+1)
+        ret.append(r3)
+    except:
+        pass
+    try:            
+        r4 = function(bomb_x+1,bomb_y-1)
+        ret.append(r4)
+    except:            
+        pass
+    try:            
+        r5 = function(bomb_x+1,bomb_y+0)
+        ret.append(r5)
+    except:
+        pass
+    try:            
+        r6 = function(bomb_x+1,bomb_y+1)
+        ret.append(r6)
+    except:
+        pass
+    try:            
+        r7 = function(bomb_x+0,bomb_y+1)
+        ret.append(r7)
+    except:
+        pass
+    try:            
+        r8 = function(bomb_x+0,bomb_y-1)
+        ret.append(r8)
+    except:
+        pass
+    return ret
+                                
+# Mouseclick handler
+def mouseclick(position):
+    global matrix, in_game, set_flag, flag, clear_result, show_result, win, click_time, status
+    click_time = timer_abs
+    x = position[0]/SPACE
+    y = position[1]/SPACE   
+    if in_game:
+        try: #Inside the field
+            # Place a flag
+            if set_flag and matrix[(x,y)][0] == False: 
+                place_flag(x,y)
+            else: #Neither flag raised nor a valid unopen square
+                matrix[(x,y)][0] = True
+                    # If the square has zero surrounding bomb
+                if matrix[(x,y)][1] == 0:        
+                    loop_neighbor(x,y,open_square)
+                    # unfortunately hit a mine
+                elif matrix[(x,y)][1] == 9:
+                    hit_mine(x,y)                   
+        except: #Outside the field
+            if y == 11: # In the flag area
+                if flag_set[x][0] == True and not set_flag:
+                    select_flag(x)
+                elif flag_set[x][0] == False and set_flag:   
+                    return_flag(x)
+
+    elif show_result:                
+        pos_x_in_range = WIDTH/2 - RESTART_AREA[0]/2 < position[0] and position[0] < (WIDTH/2 + RESTART_AREA[0]/2)
+        pos_y_in_range = HEIGHT/2 - RESTART_AREA[1]/2 < position[1] and position[1] < (HEIGHT/2 + RESTART_AREA[1]/2)
+        if pos_x_in_range and pos_y_in_range:
+            start()
+            clear_result = False            
+        else: 
+            clear_result = True
+        show_result = False
+
+def hit_mine(x,y):
+    global matrix, win, in_game
+    matrix[(x,y)][1] = 20 # Explosion animation
+    win = False
+    in_game = False
+    open_all() 
+# Timer
+def timer_handler():
+    global timer_abs, time_display
+    timer_abs = timer_abs + 1
+
+def time_string(timer_abs):
+    minute = timer_abs%60
+    if minute < 10:
+        minute_string = "0"+str(minute)
+    else:
+        minute_string = str(minute)
+    return str(timer_abs/60)+":"+minute_string
+    
+def two_second_interval():
+    global after_2s_interval, two_sec_disabled
+    after_2s_interval = True
+    two_sec_disabled = True
+    two_sec.stop()        
+
+# Following functions serve the AI mode
+# Pick a flag
+def select_flag(flag_id): #Flag format: flag_set[x] = [True,10]. First indicate 
+    global set_flag, flag_set, status
+    set_flag = True
+    try:
+        flag_set[flag_id][1] = 0 # Remove a flag
+        flag_set[flag_id][0] = False
+        status = "Flag selected"
+        print status
+    except:
+        print "Flag Select Error: wrong flag ID" + str(flag_id)
+# place_flag_in
+def place_flag(x,y):
+    global matrix, set_flag, status
+    matrix[(x,y)][1] += 10 # Change the square picture to a flag
+#    matrix[(x,y)][0] = True # Open the marked square
+    open_square(x,y)
+    set_flag = False # Reset the flag so if the player choose another flag, flag will be raised again  
+    status = "Flag set at ["+str(x)+":"+str(y)+"]"
+# Return a flag
+def return_flag(flag_id):
+    global set_flag, flag_set, status
+    flag_set[flag_id][1] = 10  # Return a flag
+    flag_set[flag_id][0] = True
+    set_flag = False
+    status = "Flag returned"
+def is_open(x,y):
+    return matrix[x,y][0]
+
+def is_unopen(x,y):
+    return not matrix[x,y][0]
+
+# count zero and unopen
+def count_unopen_square(x,y):
+    neighbor_status = loop_neighbor(x,y,is_unopen)    
+    return sum(neighbor_status)
+
+def count_open_square(x,y):
+    neighbor_status = loop_neighbor(x,y,is_open)    
+    return sum(neighbor_status)
+    
+def scan_canvas():
+    ret_value = []
+    for x in range(0,10):
+        for y in range(0,10):
+            if is_open(x,y): # Check whether the square is open                                
+                closed_neighbor = count_unopen_square(x,y)
+                if closed_neighbor:                    
+                    ret_value.append([[x,y],closed_neighbor])
+    return ret_value
+
+def place_flag_surrounding(x,y):
+    if matrix[(x,y)][0] == False: #Not yet opened        
+        i = 0
+        while i<10: #flag_set[x] = [True,10]
+            if flag_set[i][0] == True:                                
+                break
+            else:
+                i = i+1
+        if i<10:
+            select_flag(i)  #Select
+            place_flag(x,y) #Place        
+        else:
+            print "No more flag available"
+def sum_flag_surrounding(x,y):
+    return sum(loop_neighbor(x,y,is_flag))
+
+def is_flag(x,y):
+    if matrix[(x,y)][1]>=10 and matrix[(x,y)][1] < 20:
+        return True
+    else:
+        return False
+
+# Main function to perform AI 
+def AI_mode():    
+    global matrix, flag_certainty, open_certainty, click_time    
+    if in_game:
+        click_time = timer_abs
+        if not flag_certainty and not open_certainty: #No certainty is provided
+            prepare_steps()    
+            result = execute_step()
+            #If after preparing the step, no certainty -> forced to choose random
+            if not result:
+                open_rand() #print embeded in the function
+        else: #Some certainty is provided
+            execute_step()
+# assist AI_mode function, execute the step
+def execute_step():
+    global flag_certainty,open_certainty, status
+    if flag_certainty:
+        item = flag_certainty.pop()
+        if matrix[item[0],item[1]][0] == False:            
+            place_flag_surrounding(item[0],item[1])                    
+            status = "Flag at [" + str(item[0]) + ":" + str(item[1]) + "]"
+            print status
+            return True
+    elif open_certainty:
+        item = open_certainty.pop()
+        if matrix[item[0],item[1]][0] == False:            
+            open_square(item[0],item[1])
+            status = "Open ["+str(item[0])+":"+str(item[1]) + "]"
+            print status
+            return True
+    else:
+        return False
+# assist the function to set the certain steps
+def get_neighbor(x,y):
+    if matrix[(x,y)][0] == False:
+        return [x,y]
+    
+def prepare_steps():
+    global scan_canvas_ret, open_certainty, flag_certainty, status
+    
+    #Local variable for processing the open/flag certainty: keep unique, remove None
+    flag_certainty1 = []
+    open_certainty1 = []
+    flag_certainty2 = []
+    open_certainty2 = []
+    #Scan to obtain the list of square that are opened but some of neighbors are still unopened
+    scan_canvas_ret = scan_canvas()    
+    print "Scan list: " 
+    print scan_canvas_ret
+    if not scan_canvas_ret: #At the begining no square has been opened yet
+        #pass
+        #open_rand() #Open any random square
+        status = "On start, random open"
+        print status
+    else:        
+        for item in scan_canvas_ret: #Square [[3,8],5]; matrix[(x, y)] = [False, 0]  # Shown status, score, bomb status
+            # Try to return the front of this list
+            x = item[0][0]
+            y = item[0][1]
+            total_mines = matrix[(x,y)][1]
+            detected_mines = sum_flag_surrounding(x,y) #Count number of flags surrounding (x,y)
+            remaining_mines = total_mines - detected_mines
+            unopen_neighbor = item[1]
+            # All mines are open, no more to suspect
+            if remaining_mines == 0 and unopen_neighbor > 0:
+                open_certainty1 += loop_neighbor(x,y,get_neighbor) #add certain safe square into the list                	
+            #Number of unopen neighbors is exactly same as remaining mines
+            elif remaining_mines > 0 and remaining_mines == unopen_neighbor: 
+                flag_certainty1 += loop_neighbor(x,y,get_neighbor) #add certain mines into the list
+        # Remove None value
+        open_certainty2 = [x for x in open_certainty1 if x is not None] 
+        flag_certainty2 = [x for x in flag_certainty1 if x is not None] 
+        
+        # Remove replication
+        #open_certainty = []
+        for item in open_certainty2:
+            if item not in open_certainty:
+                open_certainty.append(item)
+        #flag_certainty = []
+        for item in flag_certainty2:
+            if item not in flag_certainty:
+                flag_certainty.append(item)
+def open_rand():
+    global status
+    #Open a random square that has not yet been opened        
+    not_yet_open_list = []
+    for x in range(0,10):
+        for y in range(0,10):
+            if matrix[x,y][0] == False:
+                not_yet_open_list.append([x,y])     
+    item = not_yet_open_list.pop(random.randrange(len(not_yet_open_list)))
+    open_square(item[0],item[1])
+    status = "Random open at ["+str(item[0])+":"+str(item[1])+"]"
+    print status
+def __deepcopy__(self, memo):
+    return self  
+def debug():    
+    global matrix, status, debug_status, temp_copy, solution, in_game #to open the solution
+    
+    #Print out the solution
+    for y in range(0,10):
+        #horizontal = ''
+        for x in range(0,10):
+            #horizontal += str(solution[x,y][0])[0] + " " #This line is to print the T/F status Open/Unopen            
+            #horizontal += str(solution[x,y][1]) + " " #This line is to print the number
+            #horizontal += str(matrix[x,y][1]) + " " #This line is to print the number in current matrix
+            solution[x,y][0] = True
+        #print horizontal
+    if not debug_status:
+        debug_status = True
+        temp_copy = dict(matrix)
+        matrix = dict(solution)
+        print "Grid displays solution"
+        in_game = True
+    else: #already in debug state
+        debug_status = False
+        matrix = dict(temp_copy)
+        print "Grid resumes"
+        for y in range(0,10):
+            horizontal = ''
+            for x in range(0,10):
+                #horizontal += str(solution[x,y][0])[0] + " " #This line is to print the T/F status Open/Unopen            
+                #horizontal += str(solution[x,y][1]) + " " #This line is to print the number
+                horizontal += str(temp_copy[x,y][0])[0] + " " #This line is to print the number in current matrix
+            print horizontal           
+# Create a frame
+frame = simplegui.create_frame("Minesweeper", WIDTH, HEIGHT) 
+button1 = frame.add_button('Start', start, 100)
+button2 = frame.add_button('Robot', AI_mode, 100)
+#button3 = frame.add_button('Debug', debug, 100)
+timer = simplegui.create_timer(1000, timer_handler)
+two_sec = simplegui.create_timer(2000,two_second_interval)
+
+# Register handler
+frame.set_draw_handler(draw)
+frame.set_mouseclick_handler(mouseclick)
+frame.set_canvas_background('White')
+frame.add_label('')
+frame.add_label('Artificial Intelligence')
+frame.add_label('**************')
+frame.add_label('An simplistic algorithm that mimicks ordinary human player is developed for computer to solve the mine grid. Click the button Robot to view the steps executed by this Artificial Intelligent Robot Player.')
+
+# Start
+frame.start()
+
+
+
+####################################################################################################
+# PASTE YOUR PYTHON CODE ABOVE
+####################################################################################################
+
+*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]);
+})();
+</script>
+
+</body>
