@@ -1,3 +1,4 @@
+
 <html>
 <head>
 <title>Snake Game</title>
@@ -23,10 +24,18 @@
 </div>
 <input type="button" value="Play" id="idButton" onclick="play_game();" style="height:20px; width:100px">
 <span>Score: <span id="idScore"> 0 </span></span>
+<p class = "main">Instruction: Hit Start (or press Space Bar) to get new game, to pause, and to resume the game. Control the snake direction by Up-Down-Left-Right buttons on computer's keyboard. Otherwise, hit the button below the grid. </p>
 <br><br>
 <!-- Lets make a simple snake game -->
 <canvas id="canvas" width="400" height="400" style="border:5px solid #7FFF00;"></canvas>
-
+<br>
+<input type="button" value="^" id="up" onclick="button_ctrl('38');" style="height:30px; width:30px; position:relative; left:34px; bottom:3px">
+<br>
+<input type="button" value="<" id="left" onclick="button_ctrl('37');" style="height:30px; width:30px">
+<input type="button" value="||" id="pause" onclick="button_ctrl('32');" style="height:30px; width:30px">
+<input type="button" value=">" id="right" onclick="button_ctrl('39');" style="height:30px; width:30px">
+<br>
+<input type="button" value="v" id="down" onclick="button_ctrl('40');" style="height:30px; width:30px; position:relative; left:34px; top:3px">
 <!-- Jquery -->
 <script src="snake.js"></script>
 </div>

@@ -1,14 +1,16 @@
 /*Orignal: http://thecodeplayer.com/walkthrough/html5-game-tutorial-make-a-snake-game-using-html5-canvas-jquery
 Personal Contribution/modification:
-1) Handle the hit the wall scenario
+1) Handle the hit the wall scenario. 
 2) Ensure food created doesn't collide with the snake body
 3) Draw the grid line and canvas border 
 4) Clear score on the grid, otherwise the score my obscures the snake movement if food falls into the score corner.
-Additional Goals:
 5) Fix the time lag when score add beyond 9 
 6) Position it into the middle area
 7) Alert game over. With score and pause. Resume by mouseclick
-8) Add status to game by revamping the functions to modules. 
+8) Add status (Play, Pause, Resume) to game by revamping the functions to modules. 
+9) Add control button set to control from mobile device (without keyboards)
+10) Add keyboard-friendly space-bar button. This is more natural than controlling movement 
+	by keyboards but resume failed games by using mouse to click restart.
 */
 
 //Canvas stuff
@@ -202,13 +204,38 @@ function check_collision(x, y, array)
 $(document).keydown(function(e){
 	var key = e.which;
 	//We will add another clause to prevent reverse gear
-	if(key == "37" && d != "right") d = "left";		
-	else if(key == "38" && d != "down") d = "up";
-	else if(key == "39" && d != "left") d = "right";
-	else if(key == "40" && d != "up") d = "down";
-	//The snake is now keyboard controllable
+	key_decode(key);
 })	
 
+function key_decode(key)
+{
+		if(key == "37") //LEFT
+		{
+			if(d != "right") d = "left";		
+			if (game_status == "rest") {play_game()};
+		}
+		else if(key == "38") 
+		{	
+			if (d != "down") d = "up";
+			if (game_status == "rest") {play_game()};
+		}
+		else if(key == "39")
+		{
+			if(d != "left") d = "right";
+			if (game_status == "rest") {play_game()};
+		}
+		else if(key == "40")
+		{
+			if(d != "up") d = "down";
+			if (game_status == "rest") {play_game()};
+		}
+		else if(key == "32") {play_game()}; 
+		//The snake is now keyboard controllable
+}
+function button_ctrl(key2)
+{
+	key_decode(key2);
+}
 function play_game() 
 {	
 	switch (game_status){
@@ -242,6 +269,7 @@ function play_game()
 	}
 	}
 }
+
 function run_move()
 {
 if(typeof game_loop != "undefined") clearInterval(game_loop);
