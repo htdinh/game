@@ -22,22 +22,38 @@
 	<br>
 	</div>
 </div>
+<p class = "main"><strong>Instruction</strong> 
+<img src = "http://www.mathsisfun.com/numbers/images/lurd-keyboard.png" alt =" Computer keyboard" align="right">
+<li>Hit Play (or press Space Bar) for new game, to pause, and to resume the game.</li>
+<li>Control the snake movement by Up-Down-Left-Right buttons on computer's keyboard.</li>
+<li>Otherwise, hit the buttons below the grid.</li>
+</p>
 <input type="button" value="Play" id="idButton" onclick="play_game();" style="height:20px; width:100px">
 <span>Score: <span id="idScore"> 0 </span></span>
-<p class = "main">Instruction: Hit Start (or press Space Bar) to get new game, to pause, and to resume the game. Control the snake direction by Up-Down-Left-Right buttons on computer's keyboard. Otherwise, hit the button below the grid. </p>
+
 <br><br>
 <!-- Lets make a simple snake game -->
 <canvas id="canvas" width="400" height="400" style="border:5px solid #7FFF00;"></canvas>
 <br>
-<input type="button" value="^" id="up" onclick="button_ctrl('38');" style="height:30px; width:30px; position:relative; left:34px; bottom:3px">
+<span style = "position:relative; left: 40%">
+<input type="button" value="^" id="up" onclick="button_ctrl('38');" style="height:50px; width:50px; position:relative; left:55px; bottom:3px">
 <br>
-<input type="button" value="<" id="left" onclick="button_ctrl('37');" style="height:30px; width:30px">
-<input type="button" value="||" id="pause" onclick="button_ctrl('32');" style="height:30px; width:30px">
-<input type="button" value=">" id="right" onclick="button_ctrl('39');" style="height:30px; width:30px">
+<input type="button" value="<" id="left" onclick="button_ctrl('37');" style="height:50px; width:50px">
+<input type="button" value="||" id="pause" onclick="button_ctrl('32');" style="height:50px; width:50px">
+<input type="button" value=">" id="right" onclick="button_ctrl('39');" style="height:50px; width:50px">
 <br>
-<input type="button" value="v" id="down" onclick="button_ctrl('40');" style="height:30px; width:30px; position:relative; left:34px; top:3px">
+<input type="button" value="v" id="down" onclick="button_ctrl('40');" style="height:50px; width:50px; position:relative; left:55px; top:3px">
+</span>
 <!-- Jquery -->
 <script src="snake.js"></script>
+<div class="footer">
+  <a href="../aboutme.html#copyright" target="_blank">&#169 Copyright <span class = logo> Tu's Studio</span> </a>
+  </br>
+  </br>  
 </div>
+</div>
+
+</div> <!hollyhack>
+</div> <!bouquet>
 </body>
 </html>

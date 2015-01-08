@@ -11,6 +11,7 @@ Personal Contribution/modification:
 9) Add control button set to control from mobile device (without keyboards)
 10) Add keyboard-friendly space-bar button. This is more natural than controlling movement 
 	by keyboards but resume failed games by using mouse to click restart.
+11)Avoid site scrolling when Up/Down buttons are pressed while game is in play.
 */
 
 //Canvas stuff
@@ -29,6 +30,13 @@ var pause = false;
 //Lets create the snake now
 var snake_array; //an array of cells to make up the snake
 var blinking = "blue";
+
+window.addEventListener("keydown", function(e) {
+    // space and arrow keys
+    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1 && game_status == "play") {
+        e.preventDefault();
+    }
+}, false);
 
 function init()
 {		
