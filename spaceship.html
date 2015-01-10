@@ -22,11 +22,14 @@ embedSkulptor(options,(function () {/*
 ####################################################################################################
 # PASTE YOUR PYTHON CODE BELOW
 ####################################################################################################
-
-# Spaceship - Asteroids Game
-# Features: Dual mode that allows two players
-# controlling two spaceships independently
-# Enjoy the game!
+"""
+Spaceship - Asteroids Game
+Author: Hung Tu Dinh
+ Features: 
+ - Dual mode that allows two players controlling two spaceships independently
+ - Sprite spawn avoids the current position of the spaceship
+ Enjoy the game!
+"""
 import simplegui
 import math
 import random
@@ -53,7 +56,7 @@ dual_mode = 0
 sun = False
 level = 1
 max_rock = 3
-display_guide = False
+display_guide = True
 mute_status = False
 class ImageInfo:
     def __init__(self, center, size, radius = 0, lifespan = None, animated = False):
@@ -135,7 +138,6 @@ def angle_to_vector(ang):
 
 def dist(p,q):
     return math.sqrt((p[0] - q[0]) ** 2+(p[1] - q[1]) ** 2)
-
 
 # Ship class
 class Ship:
@@ -281,26 +283,29 @@ def draw(canvas):
     canvas.draw_image(nebula_image, nebula_info.get_center(), nebula_info.get_size(), [WIDTH / 2, HEIGHT / 2], [WIDTH, HEIGHT])    
     canvas.draw_image(debris_image, center, size, (wtime - WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
     canvas.draw_image(debris_image, center, size, (wtime + WIDTH / 2, HEIGHT / 2), (WIDTH, HEIGHT))
-    # Display lives remaining
-    canvas.draw_image(lives_image, 
+    
+    if display_guide:
+        guide1 = 'Guide: Every exploded asteroid adds 1 score.'         
+        canvas.draw_text(guide1,(10,30),20,'White',"monospace")
+        guide2 = 'Every 10-score introduces a mini sun.'
+        canvas.draw_text(guide2,(10,60),20,'White',"monospace")
+        guide3 = 'Aim the spaceship to hit the sun.'
+        canvas.draw_text(guide3,(10,90),20,'White',"monospace")
+        guide4 = 'Solar energy absorption rewards 1 more live.'
+        canvas.draw_text(guide4,(10,120),20,'White',"monospace")
+    else:
+        # Draw score
+        lives_disp = "Lives: "+str(lives)
+        score_disp = "Score: " + str(score)
+        canvas.draw_text(lives_disp,(170,30),30,'White',"monospace")
+        canvas.draw_text(score_disp,(600,30),30,'White',"monospace")
+        
+        # Display lives remaining    
+        canvas.draw_image(lives_image, 
                       (lives_info.get_center()[0],350-100*lives), #ORIGINAL CENTER
                       (lives_info.get_size()[0]-40, lives_info.get_size()[1]/3), #SIZE
                       (80,30), 
                       (lives_info.get_size()[0]/2,lives_info.get_size()[1]/6))          
-    if display_guide:
-        guide1 = 'Every exploded asteroid adds 1 score.'         
-        canvas.draw_text(guide1,(10,50),20,'White',"monospace")
-        guide2 = 'Every 10-score introduces a mini sun.'
-        canvas.draw_text(guide2,(10,80),20,'White',"monospace")
-        guide3 = 'Aim the spaceship to hit the sun.'
-        canvas.draw_text(guide3,(10,110),20,'White',"monospace")
-        guide4 = 'Successful solar energy absorption rewards 1 more live'
-        canvas.draw_text(guide4,(10,140),20,'White',"monospace")
-    # Draw score
-    lives_disp = "Lives: "+str(lives)
-    score_disp = "Score: " + str(score)
-    canvas.draw_text(lives_disp,(170,30),30,'White',"monospace")
-    canvas.draw_text(score_disp,(600,30),30,'White',"monospace")
     if in_game:                            
         
         # a group of rock
@@ -364,12 +369,16 @@ def rock_spawner():
     rock_rot = 0#(random.random()-0.5)/10   
         #Sprite(self, pos, vel, ang, ang_vel, image, info, sound = None):
     if len(rock_group) <= max_rock:
+        [x, y] = [random.randint(1,WIDTH), random.randint(1,HEIGHT)]
+        min_dist = ship_info.get_radius() + asteroid_info.get_radius()
+        while dist([x,y],my_ship0.get_position()) < min_dist:
+            [x, y] = [random.randint(1,WIDTH), random.randint(1,HEIGHT)]            
         if score%3 == 0:
-            a_rock = Sprite([random.randint(1,WIDTH), random.randint(1,HEIGHT)],  rock_vel, ang, rock_rot, asteroid_image0, asteroid_info)                            
+            a_rock = Sprite([x,y],  rock_vel, ang, rock_rot, asteroid_image0, asteroid_info)                            
         if score%3 == 1:
-            a_rock = Sprite([random.randint(1,WIDTH), random.randint(1,HEIGHT)],  rock_vel, ang, rock_rot, asteroid_image1, asteroid_info)
+            a_rock = Sprite([x,y],  rock_vel, ang, rock_rot, asteroid_image1, asteroid_info)
         if score%3 == 2:
-            a_rock = Sprite([random.randint(1,WIDTH), random.randint(1,HEIGHT)], rock_vel, ang, rock_rot, asteroid_image2, asteroid_info)
+            a_rock = Sprite([x,y], rock_vel, ang, rock_rot, asteroid_image2, asteroid_info)
         rock_group.add(a_rock)        
 
 # absorb energy from the sun
@@ -490,9 +499,9 @@ def difficulty_level():
 # display scoring guide
 def score_guide():
     global display_guide
-    if not in_game and not display_guide:
+    if not display_guide: #Display is off -> turn on
         display_guide = True
-    else:
+    else: #Display is on -> now turn off
         display_guide = False
 # mute sound
 def mute():
@@ -515,8 +524,9 @@ frame.add_label('**********************')
 frame.add_label('GAME INSTRUCTION Control the spaceship to avoid collision with the asteroid and shoot them')
 frame.add_label('**********************')
 frame.add_label('SPACESHIP CONTROL')
-frame.add_label('Button to move the ship')
-frame.add_label('Up (E): Forward sdsd')
+frame.add_label('Keyboard buttons to move the ship. (Keys inside bracket are for 2nd player in Dual Mode)')
+frame.add_label('')
+frame.add_label('Up (E): Forward')
 frame.add_label('Down (X): Reverse')
 frame.add_label('Right (F): Turn clockwise')
 frame.add_label('Left (A): Turn counter clockwise')
@@ -550,8 +560,6 @@ timer = simplegui.create_timer(1000.0, rock_spawner)
 
 # get things rolling
 frame.start()
-
-
 ####################################################################################################
 # PASTE YOUR PYTHON CODE ABOVE
 ####################################################################################################
