@@ -33,9 +33,9 @@ import math
 import random 
 WIDTH = 500
 IMG_WIDTH = 675
-GUN_A = [WIDTH*0.1 -10, WIDTH*0.9+ WIDTH/40 - 22]
-GUN_B = [WIDTH*0.1 +10, WIDTH*0.9+ WIDTH/40 - 22]
-CATAPULT_POS = [WIDTH*0.1 , WIDTH*0.9+ WIDTH/40]
+GUN_A = [WIDTH*0.15 -10, WIDTH*0.85+ WIDTH/40 - 22]
+GUN_B = [WIDTH*0.15 +10, WIDTH*0.85+ WIDTH/40 - 22]
+CATAPULT_POS = [WIDTH*0.15 , WIDTH*0.85+ WIDTH/40]
 CENTER = [0.5*(GUN_A[0]+GUN_B[0]), 0.5*(GUN_A[1]+GUN_B[1])]
 BALL_RADIUS = 5
 BULLET_LIMIT = 10
@@ -156,10 +156,23 @@ def mousedrag(pos):
     global mouse_pos, ball_pos, shooting, ball_vel, state, bullet_consumption
     if in_game:
         # Setting the gun
+        #if (pos[0] <= CENTER[0] and pos[0] > 10 and pos[1] < HEIGHT-10 and pos[1] >= CENTER[1] and ball_disappear == False):
         if (pos[0] <= CENTER[0] and pos[1] >= CENTER[1] and ball_disappear == False):
             state = 1    #Update the ball position by mouse     
             mouse_pos = pos
             ball_pos = list(pos)
+            shooting = ball_pos        
+            
+        if (pos[0] < 20):
+            state = 1    #Update the ball position by mouse     
+            mouse_pos = [20, pos[1]]
+            ball_pos = [20, pos[1]]
+            shooting = ball_pos
+            
+        if (pos[1] >  WIDTH*0.85+40):
+            state = 1    #Update the ball position by mouse     
+            mouse_pos = [pos[0], WIDTH*0.85+45]
+            ball_pos = [pos[0], WIDTH*0.85+45]
             shooting = ball_pos
 def mouseclick(pos_final):
     global mouse_pos, ball_pos, shooting, ball_vel, state, bullet_consumption
