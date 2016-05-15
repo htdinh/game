@@ -92,16 +92,16 @@ function move()
 	console.log(nx.toString()+":"+ny.toString());
 	var tail = {x:nx,y:ny};
 	if (nx>=0) {
-			tail.x = nx%(w/cw); 
+			tail.x = nx%Math.round(w/cw); 
 		}
 		else {
-			tail.x = w/cw+nx%(w/cw); 
+			tail.x = w/cw+nx%Math.round(w/cw); 
 		}
 	if (ny>=0) {
-			tail.y = ny%(h/cw);
+			tail.y = ny%Math.round(h/cw);
 		}
 		else {
-			tail.y = h/cw+ny%(h/cw); 
+			tail.y = h/cw+ny%Math.round(h/cw); 
 		}
 	//Lets add the game over clauses now
 	//This will restart the game if the snake hits the wall
