@@ -78,8 +78,8 @@ function create_food()
 //Pop out the tail cell and place it in front of the head cell
 function move()
 {
-	var nx = snake_array[0].x;
-	var ny = snake_array[0].y;
+	var nx = Math.round(snake_array[0].x);
+	var ny = Math.round(snake_array[0].y);
 	//These were the position of the head cell.
 	//We will increment it to get the new head position
 	//Lets add proper direction based movement now
